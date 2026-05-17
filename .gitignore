@@ -1,0 +1,43 @@
+# system files
+.DS_Store
+
+# editor files
+.idea/
+
+# runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+data/
+
+# environment files
+.env
+.env.development
+.env.uat
+.env.production
+.env*.local
+
+# dependency directories
+node_modules
+jspm_packages
+
+# temp files
+tmp/*
+*.tsbuildinfo
+.specstory/
+
+# local config files
+config/local*
+
+# distribution
+dist
+.next
+build
+.turbo
+.vercel
+
+# dev
+dev/*
+
+graphify-out/cache/
