@@ -1,5 +1,7 @@
 # Admin service
 
+Part of **[Tomato](../../README.md)**. Supports **Admin** users: verification and management APIs with JWT protection. Other platform concerns (orders, riders, payments) live in sibling services; messaging uses **RabbitMQ** on **AWS** where applicable. **Docker** image for deployment (e.g. **Render**).
+
 Express HTTP API for administrative operations. Uses the **MongoDB Node.js driver** (not Mongoose) for flexible queries against configured collections.
 
 ## Port

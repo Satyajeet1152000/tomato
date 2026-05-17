@@ -1,5 +1,7 @@
 # Utils service
 
+Part of **[Tomato](../../README.md)**. **Razorpay** (India) and **Stripe** (global) payment flows and **Cloudinary** uploads live here; publishes payment work to **RabbitMQ** on **AWS** for **Restaurant** to consume. File size limits suit menu and profile images. **Docker** deployment (e.g. **Render**).
+
 Express service for **file uploads (Cloudinary)** and **payments** (Razorpay, Stripe). Connects to **RabbitMQ** to enqueue payment work consumed by the restaurant service. Calls the **restaurant service** to confirm orders after payment events.
 
 ## Default port

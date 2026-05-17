@@ -1,33 +1,104 @@
 # Tomato
 
-Monorepo for a multi-role food delivery experience: customers browse and order, restaurants manage menus and orders, riders fulfill deliveries, and admins oversee the platform. The repo contains a **React (Vite)** web app and several **Node.js (Express)** services that communicate over HTTP, **RabbitMQ** queues, and **Socket.IO** for realtime updates.
+**Tomato** is a full-stack food delivery platform inspired by how apps like Zomato work internally: multiple user roles, independent backend services, message queues, realtime updates, dual payment gateways, and Docker-based deployment.
 
-## Repository layout
+## User roles
+
+The application supports four roles:
+
+| Role | Description |
+|------|-------------|
+| **Customer** | Browse restaurants, place orders, track delivery live, complete checkout with regional or global payments. |
+| **Restaurant (Seller)** | Manage listings, menu items, orders, and restaurant-side operations. |
+| **Delivery Partner (Rider)** | Accept deliveries, navigate to pickup and drop-off, update order status; location is shared in real time. |
+| **Admin** | Verification and platform management. |
+
+## Backend: six microservices
+
+The backend is split into **six independent Node.js (Express) services**, each with its own package, TypeScript build, and Dockerfile:
+
+| Service | Responsibility |
+|---------|----------------|
+| [**Auth**](services/auth/) | Sign-in (including Google OAuth), JWT issuance, user persistence. |
+| [**Restaurant**](services/restaurant/) | Restaurants, menu, cart, addresses, orders; consumes payment events from the queue. |
+| [**Rider**](services/rider/) | Rider profiles and delivery workflow; consumes order-ready work from the queue. |
+| [**Admin**](services/admin/) | Administrative HTTP API over MongoDB for verification and management. |
+| [**Realtime**](services/realtime/) | **Socket.IO** server and internal HTTP API for pushing events to connected clients. |
+| [**Utils**](services/utils/) | **Cloudinary** uploads, **Razorpay** and **Stripe** payment APIs, RabbitMQ payment producer. |
+
+## Messaging between services (RabbitMQ)
+
+Services do not only talk over HTTP: **RabbitMQ** is the message broker for asynchronous flows (for example payment processing and rider order handoff). In production, RabbitMQ is **deployed on AWS** (often as a **Docker**-based deployment) and each service connects via `RABBITMQ_URL` and named queues.
+
+## Real-time features
+
+- Live **order status** updates to customers and restaurants  
+- **Rider location** tracked in real time  
+- **Navigation** for riders toward delivery locations (maps and routing on the client)  
+- Customers **track the delivery partner live** on the map  
+- **Sound notifications** for new orders and accepted deliveries (order received, delivery accepted)
+
+The [**Realtime service**](services/realtime/) drives Socket.IO; the web app connects after authentication. Other services call the realtime internal API to emit events.
+
+## Payments
+
+Two gateways are supported:
+
+- **Razorpay** — oriented toward **Indian users** (handled in **Utils** and wired to restaurant order flows).  
+- **Stripe** — oriented toward **global users** (checkout session and webhooks server-side in **Utils**; publishable key on the **frontend**).
+
+## Deployment
+
+The project is **Dockerized**: each microservice includes a `Dockerfile` for repeatable builds.
+
+Typical production layout:
+
+| Layer | Platform |
+|-------|----------|
+| **Backend microservices** | [Render](https://render.com/) (or similar), running containerized services |
+| **Frontend** | [Vercel](https://vercel.com/) (SPA with client-side routing; see `frontend/vercel.json`) |
+| **RabbitMQ** | AWS (Docker-managed or managed AMQP), shared by all services that publish or consume |
+
+Configure each service’s `PORT`, public URLs, and secrets to match your hosts (see environment tables in each [`services/*/README.md`](services/) and [`frontend/README.md`](frontend/README.md)).
+
+## Who this is for (learning)
+
+This repo is a strong fit if you want to learn:
+
+- **Microservices** architecture in **Node.js** (Express, TypeScript)  
+- **Real-time systems** with **Socket.IO**  
+- **Message queues** with **RabbitMQ**  
+- **Payment gateway** integration (Razorpay and Stripe)  
+- **Docker** and **production-style deployment**  
+- How **food-delivery marketplaces** split auth, catalog, orders, riders, admin, and realtime concerns
+
+---
+
+## Repository layout (technical)
 
 | Path | Role |
 |------|------|
-| [`frontend/`](frontend/) | SPA: Tailwind CSS, React Router, maps (Leaflet), Stripe and Razorpay checkout, Google sign-in, Socket.IO client |
-| [`services/auth/`](services/auth/) | Authentication, JWT issuance, Google OAuth, MongoDB (Mongoose) users |
-| [`services/restaurant/`](services/restaurant/) | Restaurants, menu items, cart, addresses, orders; RabbitMQ consumers and publishers; coordinates with realtime and utils |
-| [`services/utils/`](services/utils/) | Cloudinary uploads, Razorpay and Stripe payment APIs, RabbitMQ payment producer |
-| [`services/realtime/`](services/realtime/) | Socket.IO server and internal HTTP API for emitting events to clients |
-| [`services/rider/`](services/rider/) | Rider profiles and delivery workflow; consumes order-ready queue, talks to restaurant and realtime services |
-| [`services/admin/`](services/admin/) | Admin HTTP API backed by MongoDB (native driver) for operational views |
+| [`frontend/`](frontend/) | React (Vite) SPA: Tailwind, maps, Stripe/Razorpay UX, Socket.IO client |
+| [`services/auth/`](services/auth/) | Authentication and users |
+| [`services/restaurant/`](services/restaurant/) | Catalog, cart, addresses, orders |
+| [`services/rider/`](services/rider/) | Rider API and queue-driven delivery flow |
+| [`services/admin/`](services/admin/) | Admin API |
+| [`services/realtime/`](services/realtime/) | Socket.IO + internal emit API |
+| [`services/utils/`](services/utils/) | Uploads and payments |
 
-Legacy or scratch copies may exist under `tmp/`; that directory is **gitignored** and is not part of the shipped tree.
+Scratch copies may live under `tmp/`; that tree is gitignored.
 
 ## Prerequisites
 
-- **Node.js** (LTS recommended) and **npm**
-- **MongoDB** for auth, restaurant, and rider data (`MONGO_URI`, and for admin also `DB_NAME`)
-- **RabbitMQ** for restaurant, rider, and utils (`RABBITMQ_URL` and queue names)
-- **Cloudinary** account for image uploads (utils service)
-- **Razorpay** and/or **Stripe** keys where payment flows are used (utils)
-- **Google OAuth** credentials for web login (auth + frontend `GoogleOAuthProvider`)
+- **Node.js** (LTS) and **npm**
+- **MongoDB** for auth, restaurant, rider, and admin data
+- **RabbitMQ** for services that publish or consume queues
+- **Cloudinary** (Utils), **Razorpay** / **Stripe** keys as needed
+- **Google OAuth** credentials for web login (Auth + frontend)
 
 ## Installing dependencies
 
-Each package manages its own `node_modules` (no workspace root yet). From the repository root:
+Each package has its own `node_modules`:
 
 ```bash
 for d in frontend services/auth services/admin services/utils services/realtime services/rider services/restaurant; do
@@ -36,56 +107,21 @@ for d in frontend services/auth services/admin services/utils services/realtime 
 done
 ```
 
-## Configuration (environment)
+## Configuration
 
-Do **not** commit `.env` files. Copy examples from your secrets store or create `.env` per service. Common variables used across the codebase include:
+Do not commit `.env` files. Set `PORT`, `MONGO_URI`, `JWT_SEC`, `RABBITMQ_URL`, queue names, `INTERNAL_SERVICE_KEY`, service base URLs (`*_SERVICE`), and payment keys per service—the per-service READMEs list variables used in code.
 
-| Variable | Used by | Purpose |
-|----------|---------|---------|
-| `PORT` | All HTTP services | Listen port (some services require it at runtime) |
-| `MONGO_URI` | auth, restaurant, rider, admin | MongoDB connection string |
-| `DB_NAME` | admin | Mongo database name |
-| `JWT_SEC` | auth, restaurant, rider, admin, realtime (socket) | Shared JWT secret for signing/verification |
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | auth | Google OAuth (web) |
-| `RABBITMQ_URL` | restaurant, rider, utils | AMQP connection |
-| `PAYMENT_QUEUE`, `RIDER_QUEUE`, `ORDER_READY_QUEUE` | restaurant, rider, utils | Queue names for payment and rider flows |
-| `INTERNAL_SERVICE_KEY` | Cross-service `x-internal-key` header | Securing internal HTTP calls |
-| `REALTIME_SERVICE` | restaurant, rider | Base URL of realtime service for internal emit API |
-| `UTILS_SERVICE` | restaurant, rider | Base URL of utils (uploads, etc.) |
-| `RESTAURANT_SERVICE` | rider, utils | Base URL of restaurant service |
-| `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` | utils | Razorpay |
-| `STRIPE_SECRET_KEY` | utils | Stripe server |
-| `FRONTEND_URL` | utils | Stripe success/cancel URLs |
-| `CLOUD_NAME`, `CLOUD_API_KEY`, `CLOUD_SECRET_KEY` | utils | Cloudinary |
-
-The frontend currently exposes **base URLs for each API** in [`frontend/src/main.tsx`](frontend/src/main.tsx) (`authService`, `restaurantService`, etc.) and uses `VITE_STRIPE_PUBLISHABLE_KEY` and `VITE_INTERNAL_SERVICE_KEY` where referenced in components. Align service `PORT` values with those URLs when running locally.
-
-Suggested local ports (to match defaults in `main.tsx`): auth **5000**, restaurant **5001**, utils **5002**, realtime **5004**, rider **5005**, admin **5006**.
+The frontend exposes API base URLs in [`frontend/src/main.tsx`](frontend/src/main.tsx) (local defaults use ports **5000**, **5001**, **5002**, **5004**, **5005**, **5006**). Use `VITE_*` variables where the client reads env (see [`frontend/README.md`](frontend/README.md)).
 
 ## Build and run (development)
 
-| Package | Build | Start (after build) | Dev (watch) |
-|---------|-------|---------------------|-------------|
+| Package | Build | Start | Dev (watch) |
+|---------|-------|-------|-------------|
 | frontend | `npm run build` | `npm run preview` | `npm run dev` |
 | each service | `npm run build` | `npm start` | `npm run dev` |
 
-Backend services compile TypeScript to `dist/` and run `node dist/index.js`. Run **MongoDB**, **RabbitMQ**, and the services your flow needs before exercising end-to-end flows.
+Services emit compiled output to `dist/` and run `node dist/index.js`. Start MongoDB, RabbitMQ, and only the services you need for the path you are testing.
 
-## Docker
+## License and contributions
 
-Each service under `services/*/` includes a `Dockerfile` and `.dockerignore`. Build from the service directory, for example:
-
-```bash
-docker build -t tomato-auth ./services/auth
-```
-
-## Realtime and internal APIs
-
-- Restaurant and rider services call **`REALTIME_SERVICE`** at `/api/v1/internal/emit` with header `x-internal-key: INTERNAL_SERVICE_KEY` to push Socket.IO updates.
-- Utils calls restaurant order endpoints for payment confirmation with the same internal key pattern.
-
-Details per service are in each service `README.md`.
-
-## Contributing and license
-
-Project-specific contribution guidelines and license can be added here when defined.
+Add a license and contribution guidelines here when you define them for the project.

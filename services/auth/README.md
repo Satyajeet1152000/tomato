@@ -1,5 +1,7 @@
 # Auth service
 
+Part of **[Tomato](../../README.md)** (six microservices). Handles identity for **Customer**, **Restaurant**, **Rider**, and **Admin** via JWT and Google OAuth. Inter-service traffic elsewhere uses **RabbitMQ** on **AWS** (Docker); realtime is not this service. Production backends are **Dockerized** and often hosted on **Render**; this service issues tokens the other services trust with a shared `JWT_SEC`.
+
 Express 5 HTTP service for user authentication: credentials/OAuth flows, JWT access tokens, and protected profile routes. Persists users in **MongoDB** via **Mongoose**.
 
 ## Default port

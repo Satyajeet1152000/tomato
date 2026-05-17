@@ -1,5 +1,7 @@
 # Realtime service
 
+Part of **[Tomato](../../README.md)**. Powers **live order status**, **rider location** streaming, and client **Socket.IO** connections so customers can **track delivery partners on the map**. Other services call the internal emit API; **RabbitMQ** is not used inside this process but orchestrates upstream domain events. **Docker** on **Render** (typical); frontend on **Vercel** connects here.
+
 HTTP + **Socket.IO** server. Authenticates socket connections with **JWT** and exposes a small **internal REST API** so other services can emit events to connected clients.
 
 ## Port

@@ -1,5 +1,7 @@
 # Frontend (Tomato)
 
+This SPA is part of **[Tomato](../README.md)**, a food delivery stack with four roles (**Customer**, **Restaurant / Seller**, **Delivery Partner / Rider**, **Admin**). The UI covers browsing and checkout for customers, seller tools for restaurants, rider dashboards with **maps and navigation**, and admin views. **Socket.IO** powers live order status and **rider location** tracking; customers follow the rider on the map. **Sound notifications** in the app signal order received and delivery accepted. **Payments**: **Stripe** (global) in the client and **Razorpay** (India) via the **Utils** service. **Deployment**: this app targets **Vercel**; microservices run on **Render** with **Docker**. **RabbitMQ** on **AWS** is used between backend services (not in the browser).
+
 React 19 single-page application built with **Vite 7**, **TypeScript**, **Tailwind CSS v4** (`@tailwindcss/vite`), and **React Router** for role-based flows (customer, restaurant seller, rider, admin).
 
 ## Features

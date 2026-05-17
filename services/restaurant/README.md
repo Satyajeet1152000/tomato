@@ -1,5 +1,7 @@
 # Restaurant service
 
+Part of **[Tomato](../../README.md)**. Central domain for **Customer** browsing and **Restaurant (Seller)** operations: menus, cart, addresses, orders. **RabbitMQ** connects this service to **Utils** (payments) and **Rider** (order ready); **Realtime** receives internal emits for live order status. **Payments**: order confirmation ties to **Razorpay** and **Stripe** through **Utils**. Deployed as a **Docker** service (e.g. **Render**); broker runs on **AWS**.
+
 Core **catalog and ordering** API: restaurants, menu items, cart, saved addresses, and orders. Uses **MongoDB (Mongoose)**, **RabbitMQ** (payment consumer, order publishers, queues shared with rider and utils), and calls **realtime** and **utils** for notifications and uploads.
 
 ## Default port

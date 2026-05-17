@@ -1,5 +1,7 @@
 # Rider service
 
+Part of **[Tomato](../../README.md)**. Implements the **Delivery Partner (Rider)** role: assignments, status updates, and integration with **Restaurants** and **Realtime** for live location and order events. Consumes **RabbitMQ** queues (order-ready); works with **Utils** for uploads. Customers see riders on the map via the realtime pipeline. **Docker** / **Render**-style deployment; broker on **AWS**.
+
 Express API for **delivery riders**: profiles, availability, and order lifecycle actions. Uses **MongoDB (Mongoose)** and **RabbitMQ** (consumes order-ready messages, coordinates with restaurant and realtime services). File uploads for rider assets go through the **utils** service.
 
 ## Port
