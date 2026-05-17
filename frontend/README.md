@@ -1,73 +1,49 @@
-# React + TypeScript + Vite
+# Frontend (Tomato)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React 19 single-page application built with **Vite 7**, **TypeScript**, **Tailwind CSS v4** (`@tailwindcss/vite`), and **React Router** for role-based flows (customer, restaurant seller, rider, admin).
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Authentication**: Google OAuth (`@react-oauth/google`), session backed by JWT from the auth service
+- **Ordering**: Cart, checkout, addresses, order history, payment success flows
+- **Payments**: Stripe (`@stripe/stripe-js`) and related UI; Razorpay integration on the backend
+- **Maps**: Leaflet (`react-leaflet`, `leaflet-routing-machine`) for rider/customer map views
+- **Realtime**: Socket.IO client connects when authenticated for live order updates
 
-## React Compiler
+## Scripts
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| Script | Description |
+|--------|-------------|
+| `npm run dev` | Start Vite dev server with HMR |
+| `npm run build` | Typecheck (`tsc -b`) and production bundle |
+| `npm run preview` | Serve the production build locally |
+| `npm run lint` | Run ESLint |
 
-## Expanding the ESLint configuration
+## API base URLs
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Service base URLs are exported from [`src/main.tsx`](src/main.tsx) (`authService`, `restaurantService`, `utilsService`, `realtimeService`, `riderService`, `adminService`). For local development these default to `http://localhost` ports **5000**, **5001**, **5002**, **5004**, **5005**, **5006** respectively. Update those constants (or move them to `import.meta.env` variables) when deploying so the browser calls the correct hosts.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Environment variables (Vite)
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+Variables must be prefixed with `VITE_` to be exposed to the client. Examples used in code:
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- `VITE_STRIPE_PUBLISHABLE_KEY` — Stripe publishable key ([`src/pages/Checkout.tsx`](src/pages/Checkout.tsx))
+- `VITE_INTERNAL_SERVICE_KEY` — forwarded in some internal-style requests ([`src/components/RiderOrderMap.tsx`](src/components/RiderOrderMap.tsx))
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Create `frontend/.env` or `frontend/.env.local` (gitignored at repo root for `.env`) and define these for your environment.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Deployment
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+[`vercel.json`](vercel.json) rewrites all routes to `index.html` for client-side routing on Vercel.
+
+## Project structure (high level)
+
+- `src/pages/` — Route-level screens (home, login, cart, checkout, restaurant, rider dashboard, admin, etc.)
+- `src/components/` — Reusable UI (navbar, route guards, maps, restaurant and rider widgets)
+- `src/context/` — `AppProvider` (user, cart, location) and `SocketProvider`
+- `src/utils/` — Helpers such as order flow utilities
+- `src/types.ts` — Shared TypeScript types
+
+## Google OAuth
+
+The Google OAuth client ID is set on `GoogleOAuthProvider` in [`src/main.tsx`](src/main.tsx). Replace it with your own OAuth web client for production.
