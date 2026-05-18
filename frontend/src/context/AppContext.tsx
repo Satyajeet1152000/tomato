@@ -8,7 +8,7 @@ import {
 } from "react";
 import { authService, restaurantService } from "../main";
 import type { AppContextType, ICart, LocationData, User } from "../types";
-import { Toaster } from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
@@ -76,42 +76,74 @@ export const AppProvider = ({ children }: AppProviderProps) => {
   }, [user]);
 
   useEffect(() => {
-    if (!navigator.geolocation)
-      return alert("Please Allow Location to continue");
+    if (!navigator.geolocation) {
+      alert("Please allow location access to continue");
+      return;
+    }
+
     setLoadingLocation(true);
 
-    navigator.geolocation.getCurrentPosition(async (position) => {
-      const { latitude, longitude } = position.coords;
-
+    const resolveAddress = async (latitude: number, longitude: number) => {
       try {
         const res = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
+          {
+            headers: {
+              Accept: "application/json",
+              "Accept-Language": "en",
+            },
+          },
         );
+
+        if (!res.ok) {
+          throw new Error("Reverse geocoding failed");
+        }
+
         const data = await res.json();
 
         setLocation({
           latitude,
           longitude,
-          formattedAddress: data.display_name || "current location",
+          formattedAddress: data.display_name || "Current location",
         });
 
         setCity(
-          data.address.city ||
-            data.address.town ||
-            data.address.village ||
-            "Your Location"
+          data.address?.city ||
+            data.address?.town ||
+            data.address?.village ||
+            "Your Location",
         );
-        setLoadingLocation(false);
-      } catch (error) {
+      } catch {
         setLocation({
           latitude,
           longitude,
-          formattedAddress: "Current Location",
+          formattedAddress: "Current location",
         });
-        setCity("Faild to load");
+        setCity("Failed to load city");
+      } finally {
         setLoadingLocation(false);
       }
-    });
+    };
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        void resolveAddress(latitude, longitude);
+      },
+      (error) => {
+        console.error("Geolocation error:", error);
+        setLoadingLocation(false);
+        setCity("Location unavailable");
+        if (error.code === error.PERMISSION_DENIED) {
+          toast.error(
+            "Location permission denied. Allow location access in your browser settings.",
+          );
+        } else {
+          toast.error("Unable to get your location. Please try again.");
+        }
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 },
+    );
   }, []);
 
   return (
