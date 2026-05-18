@@ -4,13 +4,15 @@ import cloudinary from "cloudinary";
 import cors from "cors";
 import uploadRoutes from "./routes/cloudinary.js";
 import paymentRoutes from "./routes/payment.js";
-import { connectRabbitMQ } from "./config/rabbitmq.js";
+import { connectRabbitMQ, getChannel } from "./config/rabbitmq.js";
+import { getServerMetrics } from "./util/health.js";
 
 dotenv.config();
 
 connectRabbitMQ();
 
 const app = express();
+const startedAt = Date.now();
 
 app.use(cors());
 
@@ -27,6 +29,16 @@ cloudinary.v2.config({
   cloud_name: CLOUD_NAME,
   api_key: CLOUD_API_KEY,
   api_secret: CLOUD_SECRET_KEY,
+});
+
+app.get("/health", (_req, res) => {
+	res.json(
+		getServerMetrics("utils", startedAt, {
+			rabbitmq: {
+				status: getChannel() ? "connected" : "disconnected",
+			},
+		}),
+	);
 });
 
 app.use("/api", uploadRoutes);
