@@ -15,13 +15,13 @@ export const riderService = "http://localhost:5005";
 export const adminService = "http://localhost:5006";
 
 createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <GoogleOAuthProvider clientId="596268404302-kktqpqnl8t8r3fc33rb4clslfj8t3msc.apps.googleusercontent.com">
-      <AppProvider>
-        <SocketProvider>
-          <App />
-        </SocketProvider>
-      </AppProvider>
-    </GoogleOAuthProvider>
-  </StrictMode>
+	<StrictMode>
+		<GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+			<AppProvider>
+				<SocketProvider>
+					<App />
+				</SocketProvider>
+			</AppProvider>
+		</GoogleOAuthProvider>
+	</StrictMode>,
 );
