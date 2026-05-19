@@ -1,4 +1,5 @@
-# Tomato
+# Tomato 
+https://tomato-night.vercel.app/
 
 **Tomato** is a full-stack food delivery platform inspired by how apps like Zomato work internally: multiple user roles, independent backend services, message queues, realtime updates, dual payment gateways, and Docker-based deployment.
 
@@ -96,16 +97,6 @@ Scratch copies may live under `tmp/`; that tree is gitignored.
 - **Cloudinary** (Utils), **Razorpay** / **Stripe** keys as needed
 - **Google OAuth** credentials for web login (Auth + frontend)
 
-## Installing dependencies
-
-Each package has its own `node_modules`:
-
-```bash
-for d in frontend services/auth services/admin services/utils services/realtime services/rider services/restaurant; do
-  echo "Installing $d"
-  (cd "$d" && npm install)
-done
-```
 
 ## Configuration
 
